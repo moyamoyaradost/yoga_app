@@ -1,28 +1,28 @@
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', () => {
     'use strict';
     // Tabs functionality
-    let tab = document.querySelectorAll('.info-header-tab'),
-        info = document.querySelector('.info-header'),
-        tabContent = document.querySelectorAll('.info-tabcontent');
+    const tab = document.querySelectorAll('.info-header-tab'),
+          info = document.querySelector('.info-header'),
+          tabContent = document.querySelectorAll('.info-tabcontent');
 
-    function hideTabContent(a) {
+    const hideTabContent = (a) => {
         for (let i = a; i < tabContent.length; i++) {
             tabContent[i].classList.remove('show');
             tabContent[i].classList.add('hide');
         }
-    }
+    };
 
     hideTabContent(1);
 
-    function showTabContent(b) {
+    const showTabContent = (b) => {
         if (tabContent[b].classList.contains('hide')) {
             tabContent[b].classList.remove('hide');
             tabContent[b].classList.add('show');
         }
-    }
+    };
 
-    info.addEventListener('click', function(event) {
-        let target = event.target;
+    info.addEventListener('click', (event) => {
+        const target = event.target;
         if (target && target.classList.contains('info-header-tab')) {
             for(let i = 0; i < tab.length; i++) {
                 if (target == tab[i]) {
@@ -35,10 +35,10 @@ window.addEventListener('DOMContentLoaded', function() {
     });
 
     // Timer 
-    let deadline = '2025-04-15'; // Обновлено на будущую дату
+    const deadline = '2025-04-15'; // Обновлено на будущую дату
 
-    function getTimeRemaining(endtime) {
-        let t = Date.parse(endtime) - Date.parse(new Date());
+    const getTimeRemaining = (endtime) => {
+        const t = Date.parse(endtime) - Date.parse(new Date());
         
         // Если дата уже прошла
         if (t <= 0) {
@@ -50,9 +50,9 @@ window.addEventListener('DOMContentLoaded', function() {
             };
         }
         
-        let seconds = Math.floor((t/1000) % 60),
-            minutes = Math.floor((t/1000/60) % 60),
-            hours = Math.floor((t/(1000*60*60)));
+        const seconds = Math.floor((t/1000) % 60),
+              minutes = Math.floor((t/1000/60) % 60),
+              hours = Math.floor((t/(1000*60*60)));
 
         return {
             'total': t,
@@ -60,23 +60,18 @@ window.addEventListener('DOMContentLoaded', function() {
             'minutes': minutes,
             'seconds': seconds
         };
-    }
+    };
 
-    function setClock(id, endtime) {
-        let timer = document.getElementById(id),
-            hours = timer.querySelector('.hours'),
-            minutes = timer.querySelector('.minutes'),
-            seconds = timer.querySelector('.seconds'),
-            timeInterval = setInterval(updateClock, 1000);
-            
-        function updateClock() {
-            let t = getTimeRemaining(endtime);
+    const setClock = (id, endtime) => {
+        const timer = document.getElementById(id),
+              hours = timer.querySelector('.hours'),
+              minutes = timer.querySelector('.minutes'),
+              seconds = timer.querySelector('.seconds');
+        
+        const updateClock = () => {
+            const t = getTimeRemaining(endtime);
 
-            function addZero(num){
-                if(num <= 9) {
-                    return '0' + num;
-                } else return num;
-            }
+            const addZero = (num) => num <= 9 ? `0${num}` : num;
 
             hours.textContent = addZero(t.hours);
             minutes.textContent = addZero(t.minutes);
@@ -88,44 +83,41 @@ window.addEventListener('DOMContentLoaded', function() {
                 minutes.textContent = '00';
                 seconds.textContent = '00';
             }
-        }
+        };
         
         // Запускаем обновление часов
         updateClock();
-    }
+        const timeInterval = setInterval(updateClock, 1000);
+    };
 
     setClock('timer', deadline);
 
     // Modal - улучшенная версия с единой функцией
-    let more = document.querySelector('.more'),
-        overlay = document.querySelector('.overlay'),
-        close = document.querySelector('.popup-close'),
-        descriptionBtns = document.querySelectorAll('.description-btn');
+    const more = document.querySelector('.more'),
+          overlay = document.querySelector('.overlay'),
+          close = document.querySelector('.popup-close'),
+          descriptionBtns = document.querySelectorAll('.description-btn');
 
     // Функция открытия модального окна
-    function showModal(btn) {
+    const showModal = (btn) => {
         overlay.style.display = 'block';
         btn.classList.add('more-splash');
         document.body.style.overflow = 'hidden';
-    }
+    };
 
     // Функция закрытия модального окна
-    function closeModal() {
+    const closeModal = () => {
         overlay.style.display = 'none';
         document.querySelector('.more-splash').classList.remove('more-splash');
         document.body.style.overflow = '';
-    }
+    };
 
     // Привязка к основной кнопке
-    more.addEventListener('click', function() {
-        showModal(this);
-    });
+    more.addEventListener('click', () => showModal(more));
 
     // Привязка ко всем кнопкам в табах
-    descriptionBtns.forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            showModal(this);
-        });
+    descriptionBtns.forEach(btn => {
+        btn.addEventListener('click', () => showModal(btn));
     });
 
     // Закрытие модального окна
