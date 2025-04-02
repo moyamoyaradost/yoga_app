@@ -85,87 +85,73 @@ window.addEventListener('DOMContentLoaded', () => {
     const modalWindows = () => {
         const more = document.querySelector('.more'),
               overlay = document.querySelector('.overlay'),
-              close = document.querySelector('.popup-close'),
-              statusModal = document.querySelector('.status-modal');
+              close = document.querySelector('.popup-close');
 
-        const showModal = (modal) => {
-            modal.style.display = 'block';
+        const showModal = () => {
+            overlay.style.display = 'block';
             document.body.style.overflow = 'hidden';
         };
 
-        const closeModal = (modal) => {
-            modal.style.display = 'none';
+        const closeModal = () => {
+            overlay.style.display = 'none';
             document.body.style.overflow = '';
         };
 
-        // Main modal
-        more.addEventListener('click', () => showModal(overlay));
-        close.addEventListener('click', () => closeModal(overlay));
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeModal(overlay);
-        });
-
-        // Status modal
-        const showStatusModal = (message) => {
-            statusModal.querySelector('.status-message').textContent = message;
-            showModal(statusModal);
-        };
-        
-        return { showStatusModal };
+        more.addEventListener('click', showModal);
+        close.addEventListener('click', closeModal);
     };
 
-    const { showStatusModal } = modalWindows();
+    modalWindows();
 
     // Forms handler
-    const forms = () => {
+    const formsHandler = () => {
         const forms = document.querySelectorAll('form');
         
         const message = {
-            loading: 'Загрузка...',
-            success: 'Спасибо! Мы скоро с вами свяжемся!',
-            failure: 'Что-то пошло не так...'
+            loading: '⏳ Загрузка...',
+            success: '✅ Данные успешно отправлены!',
+            failure: '❌ Ошибка соединения!'
         };
 
         const postData = async (url, data) => {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-type': 'application/json' },
-                body: data
-            });
-            return await res.text();
-        };
-
-        const clearInputs = (form) => {
-            form.querySelectorAll('input').forEach(input => {
-                if (input.type !== 'submit') input.value = '';
-            });
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
         };
 
         forms.forEach(form => {
-            form.addEventListener('submit', (e) => {
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
                 const statusMessage = document.createElement('div');
+                statusMessage.classList.add('status');
                 statusMessage.textContent = message.loading;
                 form.appendChild(statusMessage);
 
                 const formData = new FormData(form);
-                const json = JSON.stringify(Object.fromEntries(formData.entries()));
+                const dataObject = Object.fromEntries(formData.entries());
 
-                postData('server.php', json)
-                    .then(() => {
-                        statusMessage.remove();
-                        showStatusModal(message.success);
-                    })
-                    .catch(() => {
-                        statusMessage.textContent = message.failure;
-                    })
-                    .finally(() => {
-                        clearInputs(form);
-                    });
+                try {
+                    await postData('server.php', dataObject);
+                    statusMessage.textContent = message.success;
+                } catch (error) {
+                    statusMessage.textContent = message.failure;
+                    console.error(error);
+                } finally {
+                    form.reset();
+                    setTimeout(() => statusMessage.remove(), 5000);
+                }
             });
         });
     };
 
-    forms();
+    formsHandler();
 });
