@@ -1,5 +1,6 @@
 window.addEventListener('DOMContentLoaded', () => {
     'use strict';
+
     // Tabs functionality
     const tab = document.querySelectorAll('.info-header-tab'),
           info = document.querySelector('.info-header'),
@@ -35,24 +36,14 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     // Timer 
-    const deadline = '2025-04-15'; // Обновлено на будущую дату
-
+    const deadline = '2025-12-31';
+    
     const getTimeRemaining = (endtime) => {
         const t = Date.parse(endtime) - Date.parse(new Date());
         
-        // Если дата уже прошла
-        if (t <= 0) {
-            return {
-                'total': 0,
-                'hours': 0,
-                'minutes': 0,
-                'seconds': 0
-            };
-        }
-        
         const seconds = Math.floor((t/1000) % 60),
               minutes = Math.floor((t/1000/60) % 60),
-              hours = Math.floor((t/(1000*60*60)));
+              hours = Math.floor(t/(1000*60*60));
 
         return {
             'total': t,
@@ -67,11 +58,10 @@ window.addEventListener('DOMContentLoaded', () => {
               hours = timer.querySelector('.hours'),
               minutes = timer.querySelector('.minutes'),
               seconds = timer.querySelector('.seconds');
-        
+
         const updateClock = () => {
             const t = getTimeRemaining(endtime);
-
-            const addZero = (num) => num <= 9 ? `0${num}` : num;
+            const addZero = num => num <= 9 ? `0${num}` : num;
 
             hours.textContent = addZero(t.hours);
             minutes.textContent = addZero(t.minutes);
@@ -85,41 +75,97 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         };
         
-        // Запускаем обновление часов
         updateClock();
         const timeInterval = setInterval(updateClock, 1000);
     };
 
     setClock('timer', deadline);
 
-    // Modal - улучшенная версия с единой функцией
-    const more = document.querySelector('.more'),
-          overlay = document.querySelector('.overlay'),
-          close = document.querySelector('.popup-close'),
-          descriptionBtns = document.querySelectorAll('.description-btn');
+    // Modal windows
+    const modalWindows = () => {
+        const more = document.querySelector('.more'),
+              overlay = document.querySelector('.overlay'),
+              close = document.querySelector('.popup-close'),
+              statusModal = document.querySelector('.status-modal');
 
-    // Функция открытия модального окна
-    const showModal = (btn) => {
-        overlay.style.display = 'block';
-        btn.classList.add('more-splash');
-        document.body.style.overflow = 'hidden';
+        const showModal = (modal) => {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeModal = (modal) => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        // Main modal
+        more.addEventListener('click', () => showModal(overlay));
+        close.addEventListener('click', () => closeModal(overlay));
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal(overlay);
+        });
+
+        // Status modal
+        const showStatusModal = (message) => {
+            statusModal.querySelector('.status-message').textContent = message;
+            showModal(statusModal);
+        };
+        
+        return { showStatusModal };
     };
 
-    // Функция закрытия модального окна
-    const closeModal = () => {
-        overlay.style.display = 'none';
-        document.querySelector('.more-splash').classList.remove('more-splash');
-        document.body.style.overflow = '';
+    const { showStatusModal } = modalWindows();
+
+    // Forms handler
+    const forms = () => {
+        const forms = document.querySelectorAll('form');
+        
+        const message = {
+            loading: 'Загрузка...',
+            success: 'Спасибо! Мы скоро с вами свяжемся!',
+            failure: 'Что-то пошло не так...'
+        };
+
+        const postData = async (url, data) => {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-type': 'application/json' },
+                body: data
+            });
+            return await res.text();
+        };
+
+        const clearInputs = (form) => {
+            form.querySelectorAll('input').forEach(input => {
+                if (input.type !== 'submit') input.value = '';
+            });
+        };
+
+        forms.forEach(form => {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const statusMessage = document.createElement('div');
+                statusMessage.textContent = message.loading;
+                form.appendChild(statusMessage);
+
+                const formData = new FormData(form);
+                const json = JSON.stringify(Object.fromEntries(formData.entries()));
+
+                postData('server.php', json)
+                    .then(() => {
+                        statusMessage.remove();
+                        showStatusModal(message.success);
+                    })
+                    .catch(() => {
+                        statusMessage.textContent = message.failure;
+                    })
+                    .finally(() => {
+                        clearInputs(form);
+                    });
+            });
+        });
     };
 
-    // Привязка к основной кнопке
-    more.addEventListener('click', () => showModal(more));
-
-    // Привязка ко всем кнопкам в табах
-    descriptionBtns.forEach(btn => {
-        btn.addEventListener('click', () => showModal(btn));
-    });
-
-    // Закрытие модального окна
-    close.addEventListener('click', closeModal);
+    forms();
 });

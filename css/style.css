@@ -717,3 +717,12 @@ header ul li:before {
 .overlay .popup-form__btn:hover {
   box-shadow: 0 0 10px #c78030;
 }
+.status {
+  padding: 15px;
+  margin-top: 10px;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.status.success { background: #dff0d8; color: #3c763d; }
+.status.failure { background: #f2dede; color: #a94442; }
